@@ -1,0 +1,35 @@
+#!/usr/bin/env yar
+# -*- yaml-indent-offset: 2 -*-
+# yar.yml - the default YAR file
+
+commands:
+
+  build:
+    description: |
+      Builds the code in this directory
+    needs:
+      - init
+    dependencies:
+      - "**/*.go"
+    creates:
+      - bin/yar
+    script: |
+      #!/usr/bin/env bash
+      set -xeuo pipefail
+      mkdir -p bin
+      go build -o bin/yar
+      rm -f ~/.bin/yar
+      ln -s $(pwd)/bin/yar ~/.bin/yar
+
+  init:
+    description: |
+      Initialize this directory
+    dependencies:
+      - "**/*.go"
+    creates:
+      - .init
+    script: |
+      #!/usr/bin/env bash
+      set -xeuo pipefail
+      go mod tidy
+      touch .init

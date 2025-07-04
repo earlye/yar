@@ -92,6 +92,15 @@ func loadYarFile(yarFilename string) (result *YarData) {
 	return
 }
 
+func BuildScript(contents string) string {
+	f := Must1(os.CreateTemp("", "temp"))
+	defer f.Close()
+	f.Write([]byte(contents))
+	os.Chmod(f.Name(), 0755)
+	return f.Name()
+}
+
+
 func rootCmd() (result *cobra.Command) {
 	result = &cobra.Command {
 		Use: fmt.Sprintf("%s args", Must1(os.Executable())),
@@ -115,14 +124,9 @@ func rootCmd() (result *cobra.Command) {
 					if ok {
 						log.Printf("[TRACE] isUpToDate? %v\n", command.IsUpToDate())
 						log.Printf("[TRACE] script contents\n%s\n", command.Script)
-						f := Must1(os.CreateTemp("", "temp"))
-						defer os.Remove(f.Name())
-						{
-							defer f.Close()
-							f.Write([]byte(command.Script))
-						}
-						os.Chmod(f.Name(), 0755)
-						cmd := exec.Command(f.Name())
+						name := BuildScript(command.Script)
+						defer os.Remove(name)
+						cmd := exec.Command(name)
 						cmd.Stdin = os.Stdin
 						cmd.Stdout = os.Stdout
 						cmd.Stderr = os.Stderr
